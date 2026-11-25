@@ -1,9 +1,7 @@
-
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   CalendarDays,
   ClipboardList,
-  Sparkles,
   Coffee,
   LogIn,
   LogOut,
@@ -59,14 +57,18 @@ const formatDate = (value) =>
     year: "numeric",
   });
 
-const formatTime = (value) => value || "—";
+// Semua jam diseragamkan ke format HH:MM (pakai titik dua).
+// fixTime juga merapikan data lama yang tersimpan dengan titik (16.30).
+const fixTime = (v) => (v || "").replace(".", ":");
 
-const nowHHMM = () =>
-  new Date().toLocaleTimeString("id-ID", {
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: false,
-  });
+const formatTime = (value) => (value ? fixTime(value) : "—");
+
+const nowHHMM = () => {
+  const d = new Date();
+  return `${String(d.getHours()).padStart(2, "0")}:${String(
+    d.getMinutes()
+  ).padStart(2, "0")}`;
+};
 
 /* =========================================
    CUSTOM DROPDOWN MAGANGHUB
@@ -449,7 +451,7 @@ function App() {
       return showMessage("Isi jam keluar terlebih dahulu.");
     }
 
-    if (manualOut <= myRecord.checkIn) {
+    if (manualOut <= fixTime(myRecord.checkIn)) {
       return showMessage("Jam keluar harus setelah jam masuk.");
     }
 
@@ -511,7 +513,7 @@ function App() {
         return showMessage("Isi jam keluar terlebih dahulu.");
       }
 
-      if (manualOut <= myRecord.checkIn) {
+      if (manualOut <= fixTime(myRecord.checkIn)) {
         return showMessage("Jam keluar harus setelah jam masuk.");
       }
 
@@ -535,8 +537,8 @@ function App() {
       Hari: formatDate(r.date).split(",")[0],
       Tanggal: r.date,
       Status: r.status,
-      "Jam Masuk": r.checkIn || "-",
-      "Jam Keluar": r.checkOut || "-",
+      "Jam Masuk": r.checkIn ? fixTime(r.checkIn) : "-",
+      "Jam Keluar": r.checkOut ? fixTime(r.checkOut) : "-",
       Keterangan: r.note || "-",
     }));
 
@@ -571,8 +573,8 @@ function App() {
         r.name,
         r.date,
         r.status,
-        r.checkIn || "-",
-        r.checkOut || "-",
+        r.checkIn ? fixTime(r.checkIn) : "-",
+        r.checkOut ? fixTime(r.checkOut) : "-",
         r.note || "-",
       ]),
       styles: { fontSize: 8 },
@@ -765,9 +767,9 @@ function App() {
                       </span>
 
                       <p>
-                        Masuk {myRecord.checkIn}
+                        Masuk {fixTime(myRecord.checkIn)}
                         {myRecord.checkOut
-                          ? ` · Pulang ${myRecord.checkOut}`
+                          ? ` · Pulang ${fixTime(myRecord.checkOut)}`
                           : ""}
                       </p>
                     </>
@@ -894,7 +896,7 @@ function App() {
         <input
           id="tin"
           type="time"
-          value={myRecord ? myRecord.checkIn || "" : manualIn}
+          value={myRecord ? fixTime(myRecord.checkIn) : manualIn}
           onChange={(e) => setManualIn(e.target.value)}
           disabled={Boolean(myRecord)}
           required
@@ -906,7 +908,7 @@ function App() {
         <input
           id="tout"
           type="time"
-          value={myRecord ? manualOut || myRecord.checkOut || "" : manualOut}
+          value={myRecord ? manualOut || fixTime(myRecord.checkOut) : manualOut}
           onChange={(e) => setManualOut(e.target.value)}
           required
         />
